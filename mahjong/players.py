@@ -262,7 +262,7 @@ class ChuanHeuristicPlayer(Player):
         mc_with_score = []
         for card in cards:
             mc_with_score.append(MCWithScore(card.mc, scores[card.mc]))
-        sorted(mc_with_score, key=lambda x: x.score)
+        mc_with_score = sorted(mc_with_score, key=lambda x: x.score)
         return mc_with_score
 
     # 首先打缺，然后追求牌效
@@ -379,10 +379,13 @@ class ChuanPurityColorPlayer(ChuanHeuristicPlayer):
             return index
         
         index = 0
+        not_purity_indices = []
         for card in playable_cards:
             if not MCType.is_type(card.mc, self.purity_type):
-                return index
+                not_purity_indices.append(index)
             index += 1
+        if len(not_purity_indices) != 0:
+            return random.randint(0, len(not_purity_indices) - 1)
 
         mc_with_score = self.get_mc_score(playable_cards)
         index = 0

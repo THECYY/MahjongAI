@@ -14,10 +14,16 @@ class ChuanMajongAITrainer(MajongFlowTrainer):
     def init_players(self):
         ai_player = ChuanAIPlayer("cyy_ai")
         ai_player.mate_play_brain(self.model)
+        #self.players = [
+        #    ChuanHeuristicPlayer("lyx_heruistic"),
+        #    ChuanPurityColorPlayer("wtf_purity"),
+        #    ChuanSevenPairsPlayer("lm_seven"),
+        #    ai_player
+        #]
         self.players = [
             ChuanHeuristicPlayer("lyx_heruistic"),
-            ChuanPurityColorPlayer("wtf_purity"),
-            ChuanSevenPairsPlayer("lm_seven"),
+            ChuanHeuristicPlayer("wtf_heruistic"),
+            ChuanHeuristicPlayer("lm_heruistic"),
             ai_player
         ]
 
@@ -32,17 +38,28 @@ class ChuanMajongAITrainer(MajongFlowTrainer):
         total_loss = 0
         for i in range(scores.shape[0]):
             count = hm[i].sum()
-            label = torch.ones([count], dtype=torch.float32, device=self.device)
-            if scores[i] > 0:
-                label = label * 0.2 / (count - 1)
-                label[int(indices[i])] = 0.8
-            else:
-                label = label / (count - 1)
-                label[int(indices[i])] = 0
             out = output[i][:count]
             pred = self.softmax(out)
-            loss = F.cross_entropy(label, pred)
-            total_loss += loss * abs(int(scores[i])) / 20
+            hand_index = int(indices[i])
+            pred_index = int(torch.argmax(pred))
+            if scores[i] > 0:
+                if pred_index == hand_index:
+                    self.right[hand_index] += 1
+
+                if self.cfg.use_soft_label:
+                    loss = F.mse_loss(torch.tensor([0.9], dtype=torch.float32, device=pred.device), pred[hand_index])
+                else:
+                    label = torch.zeros([count], dtype=torch.float32, device=pred.device)
+                    label[hand_index] = 1
+                    loss = F.mse_loss(label, pred)
+            else:
+                if pred_index != hand_index:
+                    self.right[hand_index] += 1
+                if pred[hand_index] > 0.1:
+                    loss = pred[hand_index] - 0.1
+                else:
+                    loss = pred[hand_index] - pred[hand_index]
+            total_loss += loss * abs(int(scores[i])) / 20 * self.flow_dataset.loss_scale[hand_index]
         return total_loss, {"loss": total_loss.item()}
 
     def forward(self, data):
@@ -61,6 +78,11 @@ class ChuanMajongAITrainer(MajongFlowTrainer):
             generate_chuan_data(self.cfg, base_dir, self.players, self.cfg.flow_size, logger_dir)
         self.flow_dataset = ChuanDataset(self.cfg, base_dir)
         self.flow_dataloader = self.flow_dataset.get_dataloader(1)
+
+    def train_a_size(self):
+        self.right = [0 for _ in range(14)]
+        super().train_a_size()
+        print(self.right)
 
     def eval(self):
         print("=========== eval ai ==========")

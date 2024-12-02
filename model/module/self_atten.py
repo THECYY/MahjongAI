@@ -25,11 +25,10 @@ class SelfAttention(nn.Module):
         attn_output_weight = torch.bmm(q, k.transpose(1, 2))
 
         if key_padding_mask is not None:
-            key_padding_mask[:, -1] = 0
             attn_output_weight = attn_output_weight.view(batch_size, self.head, seq_len, seq_len)
-            key_padding_mask = torch.logical_not(key_padding_mask)
+            key_padding_mask_not = torch.logical_not(key_padding_mask)
             attn_output_weight = attn_output_weight.masked_fill(
-                key_padding_mask.unsqueeze(1).unsqueeze(2),
+                key_padding_mask_not.unsqueeze(1).unsqueeze(2),
                 float('-inf'),
             )
             attn_output_weight = attn_output_weight.view(batch_size * self.head, seq_len, seq_len)

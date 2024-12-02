@@ -62,10 +62,12 @@ def get_cfg():
     prase.add_argument("--t_dim", type=int, default=108)
     prase.add_argument("--r_dim", type=int, default=216)
     prase.add_argument("--c_dim", type=int, default=216)
+    prase.add_argument("--only_foucs_self", type=int, default=1)
+    prase.add_argument("--use_soft_label",  type=int, default=0)
 
     # train
     prase.add_argument("--check_point", type=int, default=-1)
-    prase.add_argument("--flow_repeat", type=int, default=10) # 每一个流数据使用的次数
+    prase.add_argument("--flow_repeat", type=int, default=100) # 每一个流数据使用的次数
     prase.add_argument("--flow_size", type=int, default=8) # 每一个流数据进行的局数大小
 
     args = prase.parse_args()

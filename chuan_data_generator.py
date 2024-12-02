@@ -46,6 +46,7 @@ class PlayerProxy(Player):
         self.player.card_river = self.card_river
 
     def o_make_decision_to_change_three(self, cardss):
+        self.give_cards()
         return self.player.o_make_decision_to_change_three(cardss)
 
     def o_make_decision_to_play(self, game:MGame, playable_cards):
@@ -59,18 +60,23 @@ class PlayerProxy(Player):
         return index
 
     def o_make_decision_to_cpg(self, game, card, choice, eat, dump, gang):
+        self.give_cards()
         return self.player.o_make_decision_to_cpg(game, card, choice, eat, dump, gang)
 
     def o_make_decision_to_gang4(self, game, gangs):
+        self.give_cards()
         return self.player.o_make_decision_to_gang4(game, gangs)
 
     def o_make_decision_to_lack(self, game):
+        self.give_cards()
         return self.player.o_make_decision_to_lack(game)
 
     def o_make_decision_to_win(self, game, win_types, package):
+        self.give_cards()
         return self.player.o_make_decision_to_win(game, win_types, package)
 
     def o_make_decision_to_stand(self, game, playable_cards):
+        self.give_cards()
         return self.player.o_make_decision_to_stand(game, playable_cards)
 
 def data_mask(data, mask):
